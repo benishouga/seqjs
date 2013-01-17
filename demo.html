@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>サンプル</title>
+<script src="./lib/seq.js"></script>
+</head>
+<body>
+  <canvas id="canvas" width="600" height="2000" />
+<script>
+(function() {
+  var ctx = document.getElementById("canvas").getContext("2d");
+
+  var sample = "Aaa->Bbb[:Test\n" + 
+"Bbb]->Aaa\n" + 
+"\n" + 
+"Bbb[\n" + 
+"Bbb]\n" + 
+"\n" + 
+"right@Bbb: Test\n" + 
+"left@Bbb: Test\n" + 
+"comment@Bbb: Test\n" + 
+"note@Bbb: Test\n" + 
+"Aaa->Bbb[:Test\n" + 
+"right@Bbb: Test\n" + 
+"left@Bbb: Test\n" + 
+"Bbb]->Aaa\n" + 
+"\n" + 
+"alt: Aaaa case\n" + 
+"Aaa->Bbb:Test\n" + 
+"  ....\n" + 
+"else: Bbbb case\n" + 
+"Aaa->Bbb:Test\n" + 
+"  ....\n" + 
+"  opt\n" + 
+"Aaa->Bbb:Test\n" + 
+"    ....\n" + 
+"    loop: 100\n" + 
+"Aaa->Bbb:Test\n" + 
+"      ....\n" + 
+"    end\n" + 
+"Aaa->Bbb:Test\n" + 
+"      ....\n" + 
+"  end\n" + 
+"Aaa->Bbb:Test\n" + 
+"else: Cccc case\n" + 
+"  Bob>Alice: Please repeat\n" + 
+"Aaa->Bbb:Test\n" + 
+"end\n" + 
+"Aaa->Bbb:Test\n";
+
+
+  var diagram = new SequenceCommandParser(ctx).parse(sample);
+  diagram.show();
+
+  // var diagram = new SequenceDiagram(ctx);
+  // var line1 = new LifeLine(diagram, "どうなんだろうね");
+  // var line2 = new LifeLine(diagram, "lifeLine2");
+  // diagram.addLine(line1);
+  // diagram.addLine(line2);
+  // diagram.addItem(new SyncMessage(diagram, "a", line1, line2));
+  // diagram.addItem(new ReplyMessage(diagram, "bb", line2, line1));
+  // diagram.addItem(new Note(diagram, "みぎいいいいいい！", line2, false));
+  // diagram.addItem(new Note(diagram, "ひだりいい！", line2, true));
+  // diagram.addItem(new SyncMessage(diagram, "a", line1, line2));
+  // diagram.addItem(new SyncMessage(diagram, "a", line1, line2));
+  // diagram.addItem(new SyncMessage(diagram, "a", line1, line2));
+  // diagram.addItem(new Note(diagram, "みぎいいいいいい！", line2, false));
+  // diagram.addItem(new Note(diagram, "ひだりいい！", line2, true));
+  // diagram.addItem(new ReplyMessage(diagram, "bb", line2, line1));
+  // diagram.addItem(new ReplyMessage(diagram, "bb", line2, line1));
+  // diagram.addItem(new ReplyMessage(diagram, "bb", line2, line1));
+  // diagram.show();
+
+  // var diagram = new SequenceDiagram(ctx);
+  // var line1 = new LifeLine(diagram, "どうなんだろうね");
+  // var line2 = new LifeLine(diagram, "lifeLine2");
+  // var line3 = new LifeLine(diagram, "ライフライン３！！！！！！！");
+  // var line4 = new LifeLine(diagram, "らいふらいん４");
+  // diagram.addLine(line1);
+  // diagram.addLine(line2);
+  // diagram.addLine(line3);
+  // diagram.addLine(line4);
+  // diagram.addItem(new SyncMessage(diagram, "a", line1, line2));
+  // diagram.addItem(new ReplyMessage(diagram, "bb", line2, line1));
+  // diagram.addItem(new SyncMessage(diagram, "ccc", line1, line2));
+  // diagram.addItem(new SyncMessage(diagram, "dddd", line2, line3));
+  // diagram.addItem(new Message(diagram, "test", line3, line4));
+  // diagram.addItem(new Message(diagram, "call myself!!", line3, line3));
+  // diagram.addItem(new SyncMessage(diagram, "eeeee", line3, line3));
+  // diagram.addItem(new SyncMessage(diagram, "eeeee", line3, line3));
+  // diagram.addItem(new SyncMessage(diagram, "eeeee", line3, line1));
+  // diagram.addItem(new ReplyMessage(diagram, "ffffff", line1, line3));
+  // diagram.addItem(new Note(diagram, "右！", line3, false));
+  // diagram.addItem(new Note(diagram, "みぎいいいいいい！", line3, false));
+  // diagram.addItem(new Note(diagram, "ひだりいい！", line3, true));
+  // diagram.addItem(new Note(diagram, "ひだりいいいいいいいいいいい！", line3, true));
+  // diagram.addItem(new ReplyMessage(diagram, "ffffff", line3, line3));
+  // diagram.addItem(new ReplyMessage(diagram, "dounandaroune", line3, line3));
+  // diagram.addItem(new SyncMessage(diagram, "eeeee", line3, line2));
+  // diagram.addItem(new SyncMessage(diagram, "eeeee", line2, line4));
+  // diagram.addItem(new ReplyMessage(diagram, "ffffff", line4, line2));
+  // diagram.addItem(new ReplyMessage(diagram, "ffffff", line2, line3));
+  // diagram.addItem(new ReplyMessage(diagram, "ggggggg", line3, line2));
+  // diagram.addItem(new ReplyMessage(diagram, "hhhhhhhh", line2, line1));
+  // diagram.addItem(new SyncMessage(diagram, "test", line1, line4));
+  // diagram.addItem(new Message(diagram, "test", line2, line3));
+  // var frag1 = new Fragment(diagram, "frag1");
+  // frag1.addItem(new ExecutionStart(line4));
+  // frag1.addItem(new SyncMessage(diagram, "f1", line1, line2));
+  // var frag2 = new Fragment(diagram, "frag2");
+  // frag2.addItem(new SyncMessage(diagram, "f2", line2, line1));
+  // frag2.addItem(new ExecutionEnd(line4));
+  // var alt = new Alt(diagram, "alt");
+  // var guard1 = new Guard(diagram, "guard1");
+  // guard1.addItem(new SyncMessage(diagram, "a", line1, line2));
+  // guard1.addItem(new ReplyMessage(diagram, "bb", line2, line1));
+  // alt.addItem(guard1);
+  // var guard2 = new Guard(diagram, "guard2");
+  // guard2.addItem(new SyncMessage(diagram, "a", line1, line2));
+  // guard2.addItem(new ReplyMessage(diagram, "bb", line2, line1));
+  // alt.addItem(guard2);
+  // frag2.addItem(alt);
+  // var frag3 = new Fragment(diagram, "frag3");
+  // frag3.addItem(new ReplyMessage(diagram, "f4", line1, line2));
+  // frag2.addItem(frag3);
+  // frag1.addItem(frag2);
+  // frag1.addItem(new ExecutionEnd(line4));
+  // frag1.addItem(new ReplyMessage(diagram, "f3", line2, line1));
+  // diagram.addItem(frag1);
+  // diagram.show();
+
+})();
+</script>
+</body>
+</html>
+
