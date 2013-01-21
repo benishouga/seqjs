@@ -22,16 +22,27 @@
 <div id="live" class="row">
   <div class="span6">
     <div>
-      <textarea id="inputCode" class="span6" rows="24" style="font-size: 140%;">Aaa->Bbb[:Test
-Bbb]->Aaa
-
-Bbb[
-Bbb]
-
+      <textarea id="inputCode" class="span6" rows="24">Aaa->Bbb[:Test
 right@Bbb: Test
-left@Bbb: Test
-comment@Bbb: Test
-</textarea>
+Bbb]->Aaa
+left@Aaa: Test
+
+alt: Aaaa case
+  Aaa->Bbb[:Test
+  Bbb->Bbb[:Call myself
+  Bbb]
+  Bbb]->Aaa
+else: Bbbb case
+  opt
+    Bbb->Aaa: Yeah!
+    loop: 100
+      Bbb->Aaa: looop
+    end
+    Aaa->Bbb
+  end
+else: Cccc case
+  Bob>Alice: Please repeat
+end</textarea>
     </div>
   </div>
   <div class="span4">
@@ -52,7 +63,7 @@ comment@Bbb: Test
 setInterval(function() {
   var ctx = document.getElementById("canvas").getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  var diagram = new SequenceCommandParser(ctx).parse($("#inputCode").val());
+  var diagram = new SeqJs.TextParser(ctx).parse($("#inputCode").val());
   diagram.show();
 }, 500);
   </script>
