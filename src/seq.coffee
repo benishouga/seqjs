@@ -203,7 +203,7 @@ class Message extends Item
     to = @to.x  + (@toAdjust or 0)
     if @from is @to
       @drawCurveArrow context, from, to
-      @drawCurveText context, from
+      @drawCurveText context, from if @text?
       return
     @toRight = from < to
     @drawArrow context, from, to

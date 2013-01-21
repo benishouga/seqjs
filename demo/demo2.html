@@ -20,9 +20,9 @@
   <div class="container" style="margin-top:10px;">
 
 <div id="live" class="row">
-  <div class="span6">
+  <div class="span4">
     <div>
-      <textarea id="inputCode" class="span6" rows="24">Aaa->Bbb[:Test
+      <textarea id="inputCode" class="span4" rows="24">Aaa->Bbb[:Test
 right@Bbb: Test
 Bbb]->Aaa
 left@Aaa: Test
@@ -36,17 +36,17 @@ else: Bbbb case
   opt
     Bbb->Aaa: Yeah!
     loop: 100
-      Bbb->Aaa: looop
+      Aaa->Bbb: looop
     end
-    Aaa->Bbb
+    Aaa->Aaa
   end
 else: Cccc case
-  Bob>Alice: Please repeat
+  Aaa->Bbb
 end</textarea>
     </div>
   </div>
   <div class="span4">
-    <canvas id="canvas" class="span6" width="300" height="400" />
+    <canvas id="canvas" width="400" height="1000" />
   </div>
 </div>
   </div>
