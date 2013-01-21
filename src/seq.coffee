@@ -64,18 +64,18 @@ class Diagram extends ViewGroup
   layout: ->
   drawBoxBasedCenter: (centerX, topY, minWidth, height, text) ->
     textWidth = @measureTextWidth text
-    width = Math.max textWidth + Config.padding * 2, minWidth
+    width = Math.max (textWidth + Config.padding * 2), minWidth
     @context.strokeStyle = Config.strokeColor
     @context.fillStyle = Config.textBackgroundColor
     @context.strokeRect(-width / 2, topY, width, height)
     @context.fillStyle = Config.textColor
     @context.fillText text, - textWidth / 2, height / 2 + Util.measureTextHeight() / 2
   drawBoxBasedRight: (right, y, text) ->
-    width = @measureTextWidth text + Config.padding * 2
+    width = @measureTextWidth(text) + Config.padding * 2 + 2
     @drawBoxBasedLeft right - width, y, text
   drawBoxBasedLeft: (left, y, text) ->
     height = Util.measureTextHeight()
-    width = @measureTextWidth text + Config.padding * 2
+    width = @measureTextWidth(text) + Config.padding * 2 + 2
     @context.strokeStyle = Config.strokeColor
     @context.fillStyle = Config.textBackgroundColor
     @context.beginPath()
