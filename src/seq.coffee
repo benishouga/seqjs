@@ -8,11 +8,6 @@ Util =
       body = document.body
       body.insertBefore @span, body.firstChild
     @span.offsetHeight / 2
-  S4: ->
-    (((1 + Math.random()) * 0x10000) | 0).toString(16).substring 1
-  guid: ->
-    S4 = @S4
-    S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4()
   trim: (text)->
     return text.replace(/^\s+|\s+$/g, "");
 
@@ -24,12 +19,12 @@ Config =
   padding: 4
   executionWidth: 8
   arrowSize: 8
-  curveWidth: 12
+  curveSize: 12
   fragmentMargin: 5
-  textStyle: 'rgb(0, 0, 0)'
-  strokeStyle: 'rgb(0, 0, 0)'
-  fillStyle: 'rgb(255, 255, 255)'
-  textFillStyle: 'rgba(255, 255, 255, 0.8)'
+  textColor: 'rgb(0, 0, 0)'
+  strokeColor: 'rgb(0, 0, 0)'
+  boxBackgroundColor: 'rgb(255, 255, 255)'
+  textBackgroundColor: 'rgba(255, 255, 255, 0.8)'
 
 # --- View ---
 class View
@@ -67,6 +62,56 @@ class Diagram extends ViewGroup
     @draw @context
     @context.restore()
   layout: ->
+  drawBoxBasedCenter: (centerX, topY, minWidth, height, text) ->
+    textWidth = @measureTextWidth text
+    width = Math.max textWidth + Config.padding * 2, minWidth
+    @context.strokeStyle = Config.strokeColor
+    @context.fillStyle = Config.textBackgroundColor
+    @context.strokeRect(-width / 2, topY, width, height)
+    @context.fillStyle = Config.textColor
+    @context.fillText text, - textWidth / 2, height / 2 + Util.measureTextHeight() / 2
+  drawBoxBasedRight: (right, y, text) ->
+    width = @measureTextWidth text + Config.padding * 2
+    @drawBoxBasedLeft right - width, y, text
+  drawBoxBasedLeft: (left, y, text) ->
+    height = Util.measureTextHeight()
+    width = @measureTextWidth text + Config.padding * 2
+    @context.strokeStyle = Config.strokeColor
+    @context.fillStyle = Config.textBackgroundColor
+    @context.beginPath()
+    @context.rect left, y, width, height + Config.padding * 2
+    @context.fill()
+    @context.stroke()
+    if text
+      @context.fillStyle = Config.textColor
+      @context.fillText text, left + Config.padding, y + height + Config.padding
+  drawText: (left, y, text) ->
+    width = @measureTextWidth(text) + 1
+    textHeight = Util.measureTextHeight()
+    @context.fillStyle = Config.textBackgroundColor
+    @context.fillRect left - 2, y - textHeight + 2, width + 2, textHeight
+    @context.fillStyle = Config.textColor
+    @context.fillText text, left, y
+  drawTextBasedCenter: (centerX, bottomY, text) ->
+    width = @measureTextWidth(text) + 2
+    @drawText centerX - width / 2, bottomY, text
+  drawLine: (fromX, fromY, toX, toY) ->
+    @context.beginPath()
+    @context.moveTo fromX, fromY
+    @context.lineTo toX, toY
+    @context.stroke()
+  drawArrow: (fromX, fromY, toX, toY) ->
+    arrowSize = Config.arrowSize
+    arrowSize = -arrowSize if fromX > toX
+    wingTailX = toX - arrowSize
+    wingTailY = arrowSize / 2
+    @context.beginPath()
+    @context.moveTo fromX, fromY
+    @context.lineTo toX, toY
+    @context.moveTo wingTailX, toY + wingTailY
+    @context.lineTo toX, toY
+    @context.lineTo wingTailX, toY - wingTailY
+    @context.stroke()
 
 class SequenceDiagram extends Diagram
   constructor: (context) ->
@@ -124,12 +169,8 @@ class LifeLine extends ViewGroup
     @textWidth = @diagram.measureTextWidth @name
     @width = Math.max @textWidth + Config.padding * 2, Config.lineMinWidth
   onDraw: (context) ->
-    context.strokeRect(-@width / 2, 0, @width, Config.lineHeight)
-    context.fillText @name, - @textWidth / 2, Config.lineHeight / 2 + Util.measureTextHeight() / 2
-    context.beginPath()
-    context.moveTo 0, Config.lineHeight
-    context.lineTo 0, @end or @diagram.bottom
-    context.stroke()
+    @diagram.drawBoxBasedCenter 0, 0, Config.lineMinWidth, Config.lineHeight, @name
+    @diagram.drawLine 0, Config.lineHeight, 0, @end or @diagram.bottom
   startExecution: (message) ->
     execution = new Execution @diagram, @stack.length
     execution.start = message
@@ -149,21 +190,17 @@ class Item extends ViewGroup
   layout: ->
     @bottom = @y
   getAbsoluteBottom: ->
-    parent = if @parent? then @parent.getAbsoluteTop() else 0
-    return @bottom + parent
+    return @bottom + (@parent?.getAbsoluteTop() or 0)
   getAbsoluteTop: ->
-    parent = if @parent? then @parent.getAbsoluteTop() else 0
-    return @y + parent
+    return @y + (@parent?.getAbsoluteTop() or 0)
 
 class Message extends Item
   constructor: (@diagram, @text, @from, @to) ->
     super()
     @textWidth = @diagram.measureTextWidth @text
   onDraw: (context) ->
-    from = @from.x
-    to = @to.x
-    from = from + @fromAdjust if @fromAdjust?
-    to = to + @toAdjust if @toAdjust?
+    from = @from.x + (@fromAdjust or 0)
+    to = @to.x  + (@toAdjust or 0)
     if @from is @to
       @drawCurveArrow context, from, to
       @drawCurveText context, from
@@ -172,69 +209,31 @@ class Message extends Item
     @drawArrow context, from, to
     @drawText context, from, to if @text?
   drawArrow: (context, from, to) ->
-    arrowSize = Config.arrowSize
-    wingTailX = to - arrowSize * (if @toRight then 1 else -1)
-    wingTailY = arrowSize / 2
-    context.beginPath()
-    context.moveTo from, 0
-    context.lineTo to, 0
-    context.moveTo wingTailX, wingTailY
-    context.lineTo to, 0
-    context.lineTo wingTailX, -wingTailY
-    context.stroke()
+    @diagram.drawArrow from, 0, to, 0
   drawCurveArrow: (context, from, to) ->
-    arrowSize = Config.arrowSize
-    wingTailX = to + arrowSize
-    wingTailY = arrowSize / 2
-    right = Math.min(from, to) + Config.curveWidth * 2
-    context.beginPath()
-    context.moveTo from, 0
-    context.lineTo right, 0
-    context.lineTo right, Config.curveWidth
-    context.lineTo to, Config.curveWidth
-    context.moveTo wingTailX, Config.curveWidth + wingTailY
-    context.lineTo to, Config.curveWidth
-    context.lineTo wingTailX, Config.curveWidth - wingTailY
-    context.stroke()
+    right = Math.min(from, to) + Config.curveSize * 2
+    @diagram.drawLine from, 0, right, 0
+    @diagram.drawLine right, 0, right, Config.curveSize
+    @diagram.drawArrow right, Config.curveSize, to, Config.curveSize
   drawText: (context, from, to) ->
     base = if @toRight then from else to
-    context.fillStyle = Config.textFillStyle
-    textHeight = Util.measureTextHeight()
-    context.fillRect base + Math.abs(to - from) / 2 - @textWidth / 2 - 2, -textHeight - 1, @textWidth + 3, textHeight
-    context.fillStyle = Config.textStyle
-    context.fillText @text, base + Math.abs(to - from) / 2 - @textWidth / 2, -3
+    @diagram.drawTextBasedCenter base + Math.abs(to - from) / 2, -Config.padding, @text
   drawCurveText: (context, from) ->
-    context.fillStyle = Config.textFillStyle
-    textHeight = Util.measureTextHeight()
-    context.fillRect from + 5, -textHeight - 1, @textWidth + 3, textHeight
-    context.fillStyle = Config.textStyle
-    context.fillText @text, from + 5, -3
+    @diagram.drawText from + Config.padding, -Config.padding, @text
   layout: ->
     @execution()
-    @bottom = if @from is @to then @y + Config.curveWidth else @y
+    @bottom = if @from is @to then @y + Config.curveSize else @y
   execution: ->
     @adjustFrom()
     @adjustTo()
   adjustFrom: ->
-    if @from is @to
-      @fromAdjust = @from.currentExecution()?.right()
-      return
-    from = @from.x
-    to = @to.x
-    if 0 < to - from
-      @fromAdjust = @from.currentExecution()?.right()
-    else
-      @fromAdjust = @from.currentExecution()?.left()
+    current = @from.currentExecution()
+    if !current then return
+    @fromAdjust = if @from.x <= @to.x then current.right() else current.left()
   adjustTo: ->
-    if @from is @to
-      @toAdjust = @from.currentExecution()?.right()
-      return
-    from = @from.x
-    to = @to.x
-    if 0 < to - from
-      @toAdjust = @to.currentExecution()?.left()
-    else
-      @toAdjust = @to.currentExecution()?.right()
+    current = @to.currentExecution()
+    if !current then return
+    @toAdjust = if @from.x < @to.x then current.left() else current.right()
 
 class SyncMessage extends Message
   constructor: (diagram, text, from, to) ->
@@ -258,12 +257,11 @@ class Execution extends View
     @start = null
     @end = null
   onDraw: (context) ->
-    context.strokeStyle = Config.strokeStyle
-    context.fillStyle = Config.fillStyle
+    context.strokeStyle = Config.strokeColor
+    context.fillStyle = Config.boxBackgroundColor
     context.beginPath()
-    left = -Config.executionWidth / 2 + Config.executionWidth * @overlap
     end = @end?.getAbsoluteTop() or @diagram.bottom
-    context.rect left, @start.getAbsoluteBottom(), Config.executionWidth, end - @start.getAbsoluteBottom()
+    context.rect @left(), @start.getAbsoluteBottom(), Config.executionWidth, end - @start.getAbsoluteBottom()
     context.fill()
     context.stroke()
   left: ->
@@ -295,21 +293,11 @@ class Note extends Item
     @textWidth = @diagram.measureTextWidth @text
     @adjustPosition = 0
   onDraw: (context) ->
-    textHeight = Util.measureTextHeight()
-    textBoxWidth = @textWidth + Config.padding * 2
-    textBoxHeight = textHeight + Config.padding * 2
     if @isLeft
-      left = @target.x - @adjustPosition - textBoxWidth - Config.padding
+      @diagram.drawBoxBasedRight @target.x - @adjustPosition - Config.padding, 0, @text
     else
-      left = @target.x + @adjustPosition + Config.padding
-    context.strokeStyle = Config.strokeStyle
-    context.fillStyle = Config.textFillStyle
-    context.beginPath()
-    context.rect left, 0, textBoxWidth, textBoxHeight
-    context.fill()
-    context.stroke()
-    context.fillStyle = Config.textStyle
-    context.fillText @text, left + Config.padding, textHeight + Config.padding
+      @diagram.drawBoxBasedLeft @target.x + @adjustPosition + Config.padding, 0, @text
+
   adjust: ->
     if @isLeft
       @adjustPosition += Config.executionWidth / 2 if @target.currentExecution()
@@ -336,21 +324,13 @@ class Alt extends Item
     @diagram.popFragment()
     @bottom = @y + current
   onDraw: (context) ->
-    context.strokeStyle = Config.strokeStyle
-    context.fillStyle = Config.textFillStyle
-    textHeight = Util.measureTextHeight()
-    context.beginPath()
-    context.rect @margin, 0, @textBoxWidth, textHeight + Config.padding
-    context.fill()
-    context.stroke()
-    context.fillStyle = Config.textStyle
-    context.fillText @text, @margin + Config.padding, textHeight + Config.padding / 2
+    @diagram.drawBoxBasedLeft @margin, 0, @text
   addItem: (item) ->
     item.parent = @
     @add item
 
 class FragmentBase extends Item
-  constructor: (@diagram, @text) ->
+  constructor: (@diagram) ->
     super()
   layout: ->
     bottom = Config.itemMargin
@@ -360,7 +340,7 @@ class FragmentBase extends Item
       bottom = item.bottom
     @bottom = @y + bottom + Config.itemMargin
   onDraw: (context)->
-    context.strokeStyle = Config.strokeStyle
+    context.strokeStyle = Config.strokeColor
     context.beginPath()
     context.rect @margin, 0, @diagram.right - @margin * 2, @bottom - @y
     context.stroke()
@@ -370,20 +350,18 @@ class FragmentBase extends Item
 
 class Guard extends FragmentBase
   constructor: (diagram, text) ->
-    super diagram, '[ ' + text + ' ]'
+    super diagram
+    @text = '[ ' + text + ' ]'
     @textWidth = @diagram.measureTextWidth @text
   onDraw: (context)->
     @margin = @parent.margin
     super context
-    context.fillStyle = Config.textFillStyle
     textHeight = Util.measureTextHeight()
-    context.fillRect @margin + @parent.textBoxWidth + Config.padding, 1, @textWidth + Config.padding, textHeight + Config.padding
-    context.fillStyle = Config.textStyle
-    context.fillText @text, @margin + @parent.textBoxWidth + Config.padding * 2, textHeight + Config.padding / 2
+    @diagram.drawText @margin + @parent.textBoxWidth + Config.padding, textHeight + Config.padding, @text
 
 class Fragment extends FragmentBase
-  constructor: (diagram, text) ->
-    super diagram, text
+  constructor: (diagram, @text) ->
+    super diagram
     @textWidth = @diagram.measureTextWidth @text
     @textBoxWidth = @textWidth + Config.padding * 2
   layout: ->
@@ -393,26 +371,17 @@ class Fragment extends FragmentBase
     @diagram.popFragment()
   onDraw: (context) ->
     super context
-    context.strokeStyle = Config.strokeStyle
-    context.fillStyle = Config.textFillStyle
-    textHeight = Util.measureTextHeight()
-    context.beginPath()
-    context.rect @margin, 0, @textBoxWidth, textHeight + Config.padding
-    context.fill()
-    context.stroke()
-    context.fillStyle = Config.textStyle
-    context.fillText @text, @margin + Config.padding, textHeight + Config.padding / 2
-
+    @diagram.drawBoxBasedLeft @margin, 0, @text
 
 # --- Parser ---
 
-class SequenceCommandParser
+class TextParser
   constructor: (context) ->
     @diagram = new SequenceDiagram context
     @factory = new CommandFactory();
   parse: (text)->
     cmdTexts = text.split '\n'
-    state = new State(@factory, @diagram, cmdTexts)
+    state = new State(@diagram, cmdTexts)
     while state.hasNext()
       cmdText = state.next()
       cmd = @factory.create cmdText
@@ -422,7 +391,7 @@ class SequenceCommandParser
     return @diagram
 
 class State
-  constructor: (@factory, @diagram, @cmdTexts)->
+  constructor: (@diagram, @cmdTexts)->
     @index = 0
     @stack = []
     @lines = {}
@@ -534,3 +503,12 @@ class ElseCommand extends Command
     state.current().parent.addItem guard
     state.stack.pop()
     state.stack.push guard
+
+# Globals
+
+SeqJs = @SeqJs   = {}
+module?.exports  = SeqJs
+
+SeqJs.version    = '0.0.1'
+SeqJs.TextParser = TextParser
+

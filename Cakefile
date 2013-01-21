@@ -11,7 +11,7 @@ task 'build', 'Build lib/ from src/', ->
     callback?() if code is 0
 
 task 'watch', 'Watch src/ for changes', ->
-  coffee = spawn 'coffee', ['-j', 'seq.js', '-b', '-w', '-c', '-o', 'lib', 'src']
+  coffee = spawn 'coffee', ['-j', 'seq.js', '-w', '-c', '-o', 'lib', 'src']
   coffee.stderr.on 'data', (data) ->
     process.stderr.write data.toString()
   coffee.stdout.on 'data', (data) ->

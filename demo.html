@@ -50,7 +50,7 @@
 "Aaa->Bbb:Test\n";
 
 
-  var diagram = new SequenceCommandParser(ctx).parse(sample);
+  var diagram = new SeqJs.TextParser(ctx).parse(sample);
   diagram.show();
 
   // var diagram = new SequenceDiagram(ctx);
