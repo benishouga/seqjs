@@ -434,7 +434,7 @@ class Command
   setup: (text)->
     result = @match text
     for value, index in result
-      value = value.trim() if value
+      value = Util.trim(value) if value
       @[@names[index - 1]] = value if 0 < index
   match: (text)-> text.match(@reg)
 
@@ -507,8 +507,6 @@ class ElseCommand extends Command
 # Globals
 
 SeqJs = @SeqJs   = {}
-module?.exports  = SeqJs
-
 SeqJs.version    = '0.0.1'
 SeqJs.TextParser = TextParser
 
