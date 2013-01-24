@@ -67,7 +67,9 @@ class Diagram extends ViewGroup
     width = Math.max (textWidth + Config.padding * 2), minWidth
     @context.strokeStyle = Config.strokeColor
     @context.fillStyle = Config.textBackgroundColor
-    @context.strokeRect(-width / 2, topY, width, height)
+    @context.rect -width / 2, topY, width, height
+    @context.fill()
+    @context.stroke()
     @context.fillStyle = Config.textColor
     @context.fillText text, - textWidth / 2, height / 2 + Util.measureTextHeight() / 2
   drawBoxBasedRight: (right, y, text) ->
